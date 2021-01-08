@@ -1,0 +1,32 @@
+---
+sap_software_bucket: sapm-shared-service-prod-us-east-1-sap-software
+sap_software_bucket_path: nw75-abap/
+
+##SAP 
+sid: DEV
+domain_name: aws.domain.com
+
+### ASCS 
+ascs_sysnr: "01"
+ascs_hostname: eccdev
+scs_hostname: eccdev
+
+### CI
+ci_sysnr: "00"
+ci_hostname: eccdev
+
+### ASE
+db_hostname: eccdev
+userstore_hostname: eccdev 
+### Passwords
+master_password_ssm_key: /sapm/sap-dev/DEV/master_password
+# master_key_password: 
+# sa_password: 
+# SAPSA_PASSWORD
+# SAPSR3_PASSWORD
+# sapsr3db_password
+# SAPSSO_PASSWORD
+# ssl_password
+# sapadm_password
+# sidadm_password
+# sybsid_password

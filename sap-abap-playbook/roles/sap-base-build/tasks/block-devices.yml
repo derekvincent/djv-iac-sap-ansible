@@ -1,0 +1,27 @@
+---
+
+- name: Get file stat for '{{ item.device }}' to check if a symbolic link
+  stat:
+    path: "{{ item.device }}"
+  register: device
+
+- name: If '{{ item.device }}' is a symbolic link reassign the variable to the target.
+  set_fact:
+    device_link: "{{ device.stat.lnk_source if device.stat.islnk else item.device}}"
+
+
+
+- name: Create Filesystems for Logic Volumes" 
+  community.general.filesystem: 
+    fstype: "{{ item.fstype }}"
+    dev: "{{ device_link }}"
+
+- name: Add mountpoints to fstab" 
+  mount: 
+    path: "{{ item.mount }}"
+    src: "{{ device_link }}"
+    fstype: "{{ item.fstype }}"
+    dump: "1"
+    passno: "2"
+    state: mounted
+...

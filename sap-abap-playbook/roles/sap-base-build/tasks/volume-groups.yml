@@ -1,0 +1,42 @@
+---
+
+- name: Create Volume group "vg-{{ item.name }}"
+  lvg:
+    vg: "vg-{{ item.name }}"
+    pvs: "{{ item.devices }}"
+    pvresize: yes
+    state: present
+
+- name: Create Logic Volumes"
+  lvol: 
+    vg: "vg-{{ item.name }}"
+    lv: "lv-{{ logical_volume.name }}"
+    size: "{{ logical_volume.size }}"
+    resizefs: yes
+    shrink: no 
+    state: present
+  loop: "{{ item.logical_volumes }}"
+  loop_control:
+    loop_var: logical_volume
+
+- name: Create Filesystems for Logic Volumes" 
+  community.general.filesystem: 
+    fstype: "{{ logical_volume.fstype }}"
+    dev: "/dev/vg-{{ item.name }}/lv-{{ logical_volume.name }}"
+    # state: present
+  loop: "{{ item.logical_volumes }}"
+  loop_control:
+    loop_var: logical_volume
+
+- name: Add mountpoints to fstab" 
+  mount: 
+    path: "{{ logical_volume.mount }}"
+    src: "/dev/vg-{{ item.name }}/lv-{{ logical_volume.name }}"
+    fstype: "{{ logical_volume.fstype }}"
+    dump: "1"
+    passno: "2"
+    state: mounted
+  loop: "{{ item.logical_volumes }}"
+  loop_control:
+    loop_var: logical_volume
+...

@@ -1,0 +1,128 @@
+---
+  - name: Create the diiagnostic agent install folder
+    file:
+      path: "{{ sltools_path }}/daa_install"
+      state: directory
+      owner: root
+      group: sapinst
+      mode: '0775'
+
+  - name: Copy Silent installtion temlate file
+    copy:
+      src: "{{ role_path }}/files/daa-template.init"
+      dest: "{{ sltools_path }}/daa_install"
+      owner: root
+      group: root
+      mode: 0644
+    register: parameter_file      
+
+  - name: Set the installation paramter file fact
+    set_fact: 
+      daa_parameter_file: "{{ parameter_file.dest }}"
+
+  - name: Creating start_dir.cd file in the sap_install folder
+    copy:
+      dest: "{{ sltools_path }}/daa_install/start_dir.cd"
+      content: |
+        {{ sltools_path }}/SWPM/
+        {{ sltools_path }}/software/
+
+  - name: Adapt DAA Template Values
+    block:
+      
+    - name: Set the DAA_PASSWORD to the MASTER_PASSWORD if blank
+      set_fact:
+        daa_password: "{{ master_password }}"
+      when: daa_password is undefined
+
+    - name: Set the DAA Password in the templte
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_PASSWORD\]\]'
+        replace: "{{ daa_password }}"
+
+    - name: Set the DAA SID
+      set_fact:
+        daa_sid: "DAA"
+      when: daa_sid is undefined
+
+    - name: Set the DAA SID in the templte
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SID\]\]'
+        replace: "{{ daa_sid }}"
+
+    - name: Set the DAA System Number
+      set_fact:
+        daa_sysnr: "98"
+      when: daa_sysnr is undefined
+
+    - name: Set the DAA System Number in the templte
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SYSNR\]\]'
+        replace: "{{ daa_sysnr }}" 
+        
+    - name: Set the DAA Solution Manager Connection
+      set_fact:
+        daa_solman: "none"
+      when: daa_solman is undefined
+
+    - name: Set the DAA Solution Manager connection in the templte
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SOLMAN\]\]'
+        replace: "{{ daa_solman }}"    
+
+    - name: Set the DAA Solution Manager SSL Connection
+      set_fact:
+        daa_solman_ssl: False
+      when: daa_solman_ssl is undefined
+
+    - name: Set the DAA Solution Manager SSL connection in the templte
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SOLMAN_SSL\]\]'
+        replace: "{{ daa_solman_ssl }}" 
+
+    - name: Set the DAA Solution Manager Connection hostname
+      set_fact:
+        daa_solman_hostname: ""
+      when: daa_solman_hostname is undefined
+
+    - name: Set the DAA Solution Manager Connection hostname in the templte
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SOLMAN_HOSTNAME\]\]'
+        replace: "{{ daa_solman_hostname }}"  
+
+    - name: Set the DAA Solution Manager Connection Port
+      set_fact:
+        daa_solman_port: ""
+      when: daa_solman_port is undefined
+
+    - name: Set the DAA Solution Manager Connection port in the template
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SOLMAN_PORT\]\]'
+        replace: "{{ daa_solman_port }}"                            
+
+    - name: Set the DAA Download basket
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DOWNLOAD_BASKET\]\]'
+        replace: "{{ sltools_path }}/software/"  
+
+    - name: Set the DAA SAPJVM version
+      replace:
+        path: "{{ daa_parameter_file }}"
+        regexp: '\[\[DAA_SAPJVM\]\]'
+        replace: "SAPJVM8" 
+
+  - name: Run DAA Install 
+    command: "{{ sltools_path }}/SWPM/sapinst SAPINST_INPUT_PARAMETERS_URL=daa-template.init SAPINST_EXECUTE_PRODUCT_ID=NW_DiagnosticsAgent:GENERIC.IND.PD SAPINST_SKIP_DIALOGS=true SAPINST_START_GUISERVER=false"
+    args:
+      chdir: "{{ sltools_path }}/daa_install"
+    async: 7200
+    poll: 30
+...

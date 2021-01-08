@@ -1,0 +1,112 @@
+---
+
+- name: Package Management 
+  block: 
+
+## Wanted to add this to be able to in `lnva` log analysis tool but having
+## issues with the auto_import_key. Will address later.  
+  # - name: Add SLES15SP2 Server and Monitoring Repo
+  #   community.general.zypper_repository:
+  #     name: Server Monitoring Software (SLE_15_SP2)
+  #     auto_import_keys: yes
+  #     repo: 'https://download.opensuse.org/repositories/server:monitoring/SLE_15_SP2/server:monitoring.repo'
+  #     state: present
+    
+
+  ## Currrent bug as of 12/25/2020 with the libpython - https://www.suse.com/support/kb/doc/?id=000019818
+  - name: Issue with libpython breaking zypper and cloud resolver 
+    block: 
+    - name: Add an old package lock until resolved
+      community.general.zypper:
+        name: libpython3_6m1_0=3.6.12-3.64.2
+        oldpackage: yes
+        state: present
+      
+    - name: Lock the libpython package
+      shell: zypper al libpython3_6m1_0
+
+    - name: Lock the libpython patch
+      shell: zypper al --type patch libpython3_6m1_0
+
+  ## Zypper - Update all packages 
+  # - name: Update all packages with
+  #   community.general.zypper:
+  #     name: '*'
+  #     state: latest
+  #     update_cache: yes
+
+  ## SAP Requirments
+  - name: Install uuidd package 
+    community.general.zypper:
+      name: uuidd
+      state: latest
+
+    ## Start the uuidd service and ensure it starts on boot
+  - name: Make sure uuidd service is running
+    systemd:
+      state: started
+      enabled: yes
+      name: uuidd
+
+  - name: Install libaio1 package 
+    community.general.zypper:
+      name: libaio1
+      state: latest
+
+  - name: Install unzip package 
+    community.general.zypper:
+      name: unzip
+      state: latest
+
+  - name: Install unzip package 
+    community.general.zypper:
+      name: unrar
+      state: latest
+
+  - name: Install sapconf package 
+    community.general.zypper:
+      name: sapconf
+      state: latest
+
+  - name: Install nfs-client package 
+    community.general.zypper:
+      name: nfs-client
+      state: latest
+
+- name: Download and Install additional packages (non repo)
+  block: 
+    - name: Install Amazon SSM Agent
+      community.general.zypper:
+        disable_gpg_check: yes
+        name: 'https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm'
+        state: present
+
+      ## Start the SSM Agent service and ensure it starts on boot
+    - name: Make sure uuidd service is running
+      systemd:
+        state: started
+        enabled: yes
+        name: amazon-ssm-agent
+
+    - name: Install Amazon EFS Util - SLES Clockwork Build
+      community.general.zypper:
+        name: 'https://clkwrkswdist.s3.amazonaws.com/amazon-efs-utils-1.28.2-1.opensuse.noarch.rpm'
+        disable_gpg_check: yes
+        state: present
+
+- name: Reboot After installation and updates
+  block:
+    - name: Check if a reboot is needed on all after updates
+      register: linux_reboot_required_file
+      stat: path=/boot/do_purge_kernels get_md5=no
+
+    - name: Reboot the Server if kernel updated  
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: linux_reboot_required_file.stat.exists and reboot_after_patch is true
+...

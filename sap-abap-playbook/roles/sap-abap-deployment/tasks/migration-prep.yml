@@ -1,0 +1,48 @@
+---
+## Prepare the system as per note https://launchpad.support.sap.com/#/notes/2523137
+## The secondary check is not implimented after the script is run since everytime 
+## it is run on a clean install their are no extra tables left. 
+
+- name: Preapare a system for a migration running the cleanSAPSR3Schema.sql
+  block:
+    - name: Set the sidadm user fact
+      set_fact:
+        sidadm: "{{ sid|lower }}adm"
+    
+    - name: Set the sybsid user fact
+      set_fact:
+        sybsid: "syb{{ sid|lower }}"
+    
+    ## Stop SAP the system and ensure just the DB is running.
+    ## TODO: having issue with become setup. Need to evaluate later. 
+    - name: Stop the SAP System
+      # become: true
+      # become_user: "{{ sidadm }}"
+      # become_method: su
+      # command: stopsap
+      # args:
+      #   chdir: "/sapmnt/{{ sid }}/exe/uc/linuxx86_64/"
+      shell: "su - {{ sidadm }} -c /sapmnt/{{ sid }}/exe/uc/linuxx86_64/stopsap"
+      register: stopsap_status
+
+    - name: Start the SAP System
+      command: "/usr/sap/hostctrl/exe/saphostctrl -nr 99 -function StartDatabase -dbname {{ sid}} -dbtype syb"
+      register: startdb_status
+
+    - name: Current DB status
+      debug: 
+        msg: "Stop SAP RC: {{ stopsap_status.rc }} \n START DV RC: {{ startdb_status.rc }}"
+
+- name: Move cleanSAPSR3Schema.sql file to server
+  copy:
+    src: "{{ role_path }}/files/cleanSAPSR3Schema.sql"
+    dest: "/sybase/{{ sid }}"
+    owner: "{{ sybsid }}"
+    group: sapsys
+    mode: 0644
+  register: clean_schema_script 
+
+- name: Run SQL script to clean the SAPSR3 schema
+  shell: "su - {{ sybsid }} -c 'isql -USAPSR3 -S{{ sid }} -X -P{{ master_password }} -i{{ clean_schema_script.dest }}'"
+
+...

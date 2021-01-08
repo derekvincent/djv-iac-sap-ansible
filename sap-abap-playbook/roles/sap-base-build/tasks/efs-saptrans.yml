@@ -1,0 +1,90 @@
+---
+
+
+## We need to figure out what our current Zone ID is inorder 
+## to make sure we are mounting the current efs mount point. 
+## The physical AZs maybe different across accounts. 
+
+- name: 'Get current Availibity Zone from AWS'
+  uri:
+    url: 'http://169.254.169.254/latest/meta-data/placement/availability-zone'
+    return_content: yes
+  changed_when: False
+  register: availability_zone
+
+- name: Gather information about a single availability zone
+  amazon.aws.aws_az_info:
+    region: "{{availability_zone.content[:-1]}}"
+    filters:
+      zone-name: "{{availability_zone.content}}"
+  changed_when: False
+  register: availability_zone_info
+    
+- name: Set current AZ Zone ID
+  set_fact: 
+    zone_id: "{{ availability_zone_info.availability_zones[0].zone_id }}"
+
+## Fetch the approopriate EFS record for the zone from the variables. 
+- name: Set Current Mount Record
+  set_fact:
+    efs_mount: "{{ saptrans[zone_id] }}"
+
+- name: Set Mount Options
+  block:
+    - name: Define mount_options 
+      set_fact: 
+        mount_option: "_netdev,"
+
+    - name: Set TLS option 
+      set_fact: 
+        mount_option: "{{mount_option}}tls,"
+      when: efs_mount.tls is true
+
+    - name: Set IAM option 
+      set_fact: 
+        mount_option: "{{mount_option}}iam,"
+      when: efs_mount.iam is true
+
+    - name: Set Access Point option 
+      set_fact: 
+        mount_option: "{{mount_option}}accesspoint={{efs_mount.access_point}}"
+      when: efs_mount.access_point is defined and efs_mount.access_point
+    
+    - name: Clean the trailing ,  
+      set_fact: 
+        mount_option: "{{mount_option|trim(',')}}"
+
+## Test if we can resolve the hostname. If we can not then the EFS mount point 
+## is likley in another account/vpc and we will need to add entry to the machines 
+## hosts file for proper resolution. 
+
+- name: Determine if EFS mount point is in the current account/vpc
+  block:
+
+  - name: Try and resolve the EFS mountpoint hostname
+    command: dig +short "{{ efs_mount.filesystem_host }}"
+    changed_when: false
+    register: efs_dns_lookup
+  
+  - name: Set the is_local_efs fact
+    set_fact:
+      is_local_efs: "{{ true if efs_dns_lookup.stdout else false }}"
+  
+  - name: If EFS is not local add Hosts entry
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ efs_mount.filesystem_ip }}\t{{ efs_mount.filesystem_host }}"
+      state: present
+    when: not is_local_efs
+  
+  - name: Mount the EFS file system 
+    mount: 
+      path: /usr/sap/trans
+      src: "{{ efs_mount.filesystem_host }}"
+      fstype: efs
+      opts: "{{ mount_option }}"
+      dump: "0"
+      passno: "0"
+      state: mounted
+
+...

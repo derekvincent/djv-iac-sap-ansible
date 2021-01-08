@@ -1,0 +1,188 @@
+---
+## Defaults but can be over ridden. 
+- name: Set Logistics Tools path 
+  set_fact: 
+    sltools_path: /sapmnt/sltools
+  when: sltools_path is undefined
+
+- name: Setup Installation environment
+  block:
+    - name: Create the software folder to download the SAP software
+      file:
+        path: /sapmnt/sltools/software
+        state: directory
+
+    - name: Create the SWPM folder to download the SAP software
+      file:
+        path: /sapmnt/sltools/SWPM
+        state: directory
+
+    # - name: Get list of files from S3
+    #   aws_s3:
+    #     mode: list
+    #     bucket: "{{ sap_software_bucket }}"
+    #     prefix: "{{ sap_software_bucket_path }}"
+    #     marker: "{{ sap_software_bucket_path }}"
+    #   register: s3_bucket_items
+
+    # - name: Download files from S3
+    #   aws_s3:
+    #     mode: get
+    #     bucket: "{{ sap_software_bucket }}"
+    #     object: "{{ item }}"
+    #     dest: "/sapmnt/sltools/software/{{ item|basename }}"
+    #   with_items: "{{ s3_bucket_items.s3_keys }}"
+
+    - name: Find SAPCAR file 
+      ansible.builtin.find:
+        paths: /sapmnt/sltools/software
+        patterns: 'SAPCAR*,sapcar*'
+      register: sapcar_source
+    
+    - name: Copy SAPCAR to /usr/local/bin and set it executable
+      copy: 
+        src: "{{ sapcar_source.files[0].path }}" 
+        dest: /usr/local/bin/sapcar
+        mode: '0744'
+        remote_src: yes
+      when: sapcar_source.files
+
+    - name: Handle Export DVD expansion
+      block: 
+
+      - name: Read the software manifest yaml file
+        command:
+          cmd: "cat {{ sltools_path }}/software/manifest.yml"
+        register: raw_manifest
+
+      - name: Set the software_manifest fact from the downloaded file. 
+        set_fact:
+          software_manifest: "{{ raw_manifest.stdout | from_yaml }}"
+
+      - name: Create the software folder to download the SAP software
+        file:
+          path: "{{ sltools_path }}/software/export_dvd"
+          state: directory
+          owner: root
+          group: root
+          mode: '0775'
+
+      - name: Extract the Export DVD via ZIP 
+        unarchive:
+          src: "{{ sltools_path }}/software/{{ software_manifest.abap_export.filename }}"
+          dest: "{{ sltools_path }}/software/export_dvd"
+          remote_src: yes
+        when: software_manifest.abap_export.filetype == "zip"
+
+      # - name: Extract the Export DVD via RAR 
+      #   command: "unrar x {{ sltools_path }}/software/{{ software_manifest.java_export.filename }}"
+      #   args:
+      #     chdir: "{{ sltools_path }}/software/export_dvd"
+      #   when: software_manifest.java_export.filetype == "rar"
+
+    - name: Find SWPM in the sltools software folder
+      ansible.builtin.find:
+        paths: /sapmnt/sltools/software
+        patterns: '^(?:SWPM|swpm).*(?:SAR|sar)$'
+        use_regex: yes
+      register: swpm_source
+
+    - name: expand SWPM sar file to the sltools/SWPM folder
+      command: /usr/local/bin/sapcar -xvf "{{ swpm_source.files[0].path }}"
+      args:
+        chdir: /sapmnt/sltools/SWPM
+      when: swpm_source.files
+      register: swpm_expand
+
+    - name: SWPM Expand Return
+      debug:
+        msg: "{{ swpm_expand.rc }}"
+
+## Preapare for the Install 
+- name: Prepare for the Install
+  block: 
+  
+  - name: Create the sapinst group 
+    group:
+      name: sapinst
+      state: present
+      gid: 1000
+  
+  - name: Add root to the sapinst group 
+    user:
+      name: root
+      groups: sapinst
+      append: yes 
+
+  - name: Create the software folder to download the SAP software
+    file:
+      path: "{{ sltools_path }}/sap_install"
+      state: directory
+      owner: root
+      group: sapinst
+      mode: '0775'
+
+  ## This will require a bunch of madness to figure out what one we are doing... 
+  - name: Copy Silent installtion temlate file
+    copy:
+      src: "{{ role_path }}/files/sap-nw-750-abap-ase.init"
+      dest: "{{ sltools_path }}/sap_install"
+      owner: root
+      group: root
+      mode: 0644
+    register: parameter_file
+
+  - name: Set the installation paramter file fact
+    set_fact: 
+      sap_parameter_file: "{{ parameter_file.dest }}"
+
+  - name: Check if SAP is installed
+    stat: 
+      path: /usr/sap/sapservices
+    register: sap_services
+
+  - name: Check /usr/sap/sapservices for SAP SID 
+    shell: "grep -i '{{ sid }}' /usr/sap/sapservices"
+    register: sap_sid_present
+
+  - name: IS SAP INSTALLED?
+    debug:
+      msg: "SAP Present: {{ sap_services.stat.exists }}"
+
+  # - name: Set template facts for the SAP Install Template  
+  #   include_tasks: abap-install.yml
+  #   when: not sap_services.stat.exists 
+
+  - name: Check /usr/sap/sapservices for DAA Agent 
+    shell: "grep -i 'SMDA' /usr/sap/sapservices"
+    register: sap_sid_present
+
+  - name: Set template facts for the SAP Install Template  
+    include_tasks: daa-install.yml
+    when: sap_sid_present is not changed
+
+  - name: Run the migration prepare steps
+    include_tasks: migration-prep.yml
+
+  - name: Run the migration prepare steps
+    include_tasks: cleanup.yml
+
+        
+## Run sapinst
+## 1. Create the sapinst group and assign to root
+## 2. Create a {{ sltools_path}}/sap_install directory
+##    - root:sapinst ownership 
+##    - 775 permisson 
+## 3. Move the param file and adpat to the sap_install dir 
+## 4. Create the start_dir.cd
+##  Change to {{ sltools_path }}/sap_install
+## {{ sltools_path }}/SWPM/sapinst SAPINST_INPUT_PARAMETERS_URL=sap-nw-750-abap-ase.init SAPINST_EXECUTE_PRODUCT_ID=NW_ABAP_OneHost:NW750.SYB.ABAP SAPINST_SKIP_DIALOGS=true SAPINST_START_GUISERVER=false
+
+
+### NOTE ###
+### For main ainsbile detect if the disk size has change and do a pvextend on the device... 
+##  - pvresize /dev/nvme1n1
+### - xfs_growfs <<mount point>> 
+###   - ie. xfs_growfs /sybase/ECD
+## ref: https://aws.amazon.com/premiumsupport/knowledge-center/create-lv-on-ebs-volume/
+...

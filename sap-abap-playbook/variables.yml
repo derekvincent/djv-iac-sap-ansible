@@ -1,0 +1,68 @@
+---
+## Hostname and IP 
+hostname: "sap-grc-dev"
+domainname: "aws.keyfile.corp"
+private_ip_address: 10.100.0.8
+
+## Disks Devices 
+swap_device: /dev/sdw
+
+volume_groups: 
+  - name: sap
+    devices: 
+      - /dev/sdf
+    logical_volumes:
+      - name: usr_sap
+        size: 50G
+        mount: /usr/sap
+        fstype: xfs
+      - name: sapmnt
+        size: 100%FREE
+        mount: /sapmnt
+        fstype: xfs
+  - name: ase
+    devices: 
+      - /dev/sdh
+    logical_volumes:
+      - name: ase
+        size: 30G
+        mount: /sybase/DAC/
+        fstype: xfs
+      - name: logs
+        size: 40G
+        mount: /sybase/DAC/saplog_1
+        fstype: xfs
+      - name: data
+        size: 100%FREE
+        mount: /sybase/DAC/sapdata_1
+        fstype: xfs        
+  - name: backup
+    devices: 
+      - /dev/sdo
+    logical_volumes:
+      - name: backups
+        size: 100G
+        mount: /sybase/DAC/backup
+        fstype: xfs
+      - name: archive_logs
+        size: 100%FREE
+        mount: /sybase/DAC/archive_logs
+        fstype: xfs
+
+block_devices: 
+    - name: installer
+      device: /dev/sdn
+      size: 100%FREE
+      mount: /sapmnt/media
+      fstype: xfs
+
+
+saptrans: 
+  use2-az1:
+    filesystem_id: fs-3df46f45
+    filesystem_host: fs-3df46f45.efs.us-east-2.amazonaws.com
+    # filesystem_host: fs-fdc8a085.efs.us-east-2.amazonaws.com
+    filesystem_ip: 10.100.12.25
+    tls: yes
+    iam: yes
+    access_point: fsap-01230fe8d391ac5b6

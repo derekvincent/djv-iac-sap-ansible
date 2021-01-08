@@ -1,0 +1,19 @@
+  - name: Creating start_dir.cd file in the sap_install folder
+    copy:
+      dest: "{{ sltools_path }}/sap_install/start_dir.cd"
+      content: |
+        {{ sltools_path }}/SWPM
+        /sapmnt/sltools/software/export_dvd/
+
+  - name: Set template facts for the SAP Install Template  
+    include_tasks: template_facts.yml
+
+  - name: Adapt the SAP Install Template  
+    include_tasks: adjust_template.yml
+
+  - name: Run SAP Install 
+    command: "{{ sltools_path }}/SWPM/sapinst SAPINST_INPUT_PARAMETERS_URL=sap-nw-750-abap-ase.init SAPINST_EXECUTE_PRODUCT_ID=NW_ABAP_OneHost:NW750.SYB.ABAP SAPINST_SKIP_DIALOGS=true SAPINST_START_GUISERVER=false"
+    args:
+      chdir: "{{ sltools_path }}/sap_install"
+    async: 7200
+    poll: 30

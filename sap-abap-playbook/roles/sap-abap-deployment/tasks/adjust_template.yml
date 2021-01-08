@@ -1,0 +1,137 @@
+- name: Replace Variables in the template files
+  block:
+
+  ## SID 
+  - name: Replace All the SID instances in the file
+    replace:
+      path: "{{ sap_parameter_file }}"
+      regexp: '\[\[SID\]\]'
+      replace: "{{ sid }}"
+
+  - name: Download Basket for installation software
+    replace:
+      path: "{{ sap_parameter_file }}"
+      regexp: '\[\[DOWNLOAD_BASKET\]\]'
+      replace: "{{ sltools_path }}/software"
+
+  - name: Server Domain name 
+    replace:
+      path: "{{ sap_parameter_file }}"
+      regexp: '\[\[DOMAIN_NAME\]\]'
+      replace: "{{ domain_name }}"
+
+  - name: ASCS Setup 
+    block: 
+    - name: ASCS System Number
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[ASCS_INSTANCE_NUMBER\]\]'
+        replace: "{{ ascs_sysnr }}"
+
+    - name: ASCS Hostname
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[ASCS_HOSTNAME\]\]'
+        replace: "{{ ascs_hostname }}"
+
+    - name: SCS Hostname
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SCS_HOSTNAME\]\]'
+        replace: "{{ scs_hostname }}"
+
+  - name: CI Setup 
+    block: 
+    - name: ASCS System Number
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[CI_INSTANCE_NUMBER\]\]'
+        replace: "{{ ci_sysnr }}"
+
+    - name: ASCS Hostname
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[CI_HOSTNAME\]\]'
+        replace: "{{ ci_hostname }}"
+
+  - name: DB Setup 
+    block: 
+    - name: Database Hostname 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[DB_HOSTNAME\]\]'
+        replace: "{{ db_hostname }}"
+
+    - name: ASCS Hostname
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[USERSTORE_HOSTNAME\]\]'
+        replace: "{{ userstore_hostname }}"
+
+  - name: Set Passwords
+    block: 
+    - name: Master Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[MASTER_PASSWORD\]\]'
+        replace: "{{ master_password }}"   
+
+    - name: Master Key Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[MASTER_KEY_PASSWORD\]\]'
+        replace: "{{ master_key_password }}"  
+
+    - name: SA Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SA_PASSWORD\]\]'
+        replace: "{{ sa_password }}"  
+
+    - name: SAPSA Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SAPSA_PASSWORD\]\]'
+        replace: "{{ sapsa_password }}" 
+
+    - name: SAPSR3 Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SAPSR3_PASSWORD\]\]'
+        replace: "{{ sapsr3_password }}"
+
+    - name: SAPSR3DB Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SAPSR3DB_PASSWORD\]\]'
+        replace: "{{ sapsr3db_password }}" 
+
+    - name: SAPSSO Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SAPSSO_PASSWORD\]\]'
+        replace: "{{ sapsso_password }}"
+
+    - name: SSL Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SSL_PASSWORD\]\]'
+        replace: "{{ ssl_password }}"
+
+    - name: SAPADM Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SAPADM_PASSWORD\]\]'
+        replace: "{{ sapadm_password }}"
+
+    - name: SIDADM Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SIDADM_PASSWORD\]\]'
+        replace: "{{ sidadm_password }}"        
+
+    - name: SYBSID Password 
+      replace:
+        path: "{{ sap_parameter_file }}"
+        regexp: '\[\[SYBSID_PASSWORD\]\]'
+        replace: "{{ sybsid_password }}" 

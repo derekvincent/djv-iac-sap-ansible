@@ -1,0 +1,111 @@
+---
+
+- name: Enable Swap
+  block: 
+    - name: Get file stat for '{{ swap_device }}' to check if a symbolic link
+      stat:
+        path: "{{ swap_device }}"
+      register: swap_link
+
+    - name: If '{{ swap_device}}' is a symbolic link reassign the variable to the target.
+      set_fact:
+        swap_device_link: "{{ swap_link.stat.lnk_source if swap_link.stat.islnk else swap_device}}"
+      # when: swap_link.stat.islnk is defined and swap_link.stat.islnk
+
+    - name: Run swapon --noheadings to see if drive is mounted
+      command: swapon --noheadings 
+      changed_when: false
+      register: swap_enabled
+
+    - name: Create Swap patrition
+      command: mkswap -L swap '{{ swap_device_link }}'
+      when: swap_enabled.stdout is not search(swap_device_link)
+
+    - name: Enable swap
+      command: swapon '{{ swap_device_link }}'
+      when: swap_enabled.stdout is not search(swap_device_link)
+
+    - name: Add swap to mount tab
+      mount:
+        fstype: swap 
+        src: '{{ swap_device_link }}'
+        path: none
+        opts: defaults 
+        passno: '0' 
+        dump: '0' 
+        state: present
+
+## Create and mount the volume groups and logical volumes 
+- name: Create and mount ebs volume groups
+  include_tasks: volume-groups.yml
+  loop: "{{ volume_groups }}"
+  when: volume_groups is defined and volume_groups
+
+## Add block device mount points 
+- name: Create amd mount ebs block devices
+  include_tasks: block-devices.yml
+  loop: "{{ block_devices }}"
+  when: block_devices is defined and block_devices
+
+## Set the Machine hostname.
+- name: Set the hostname and update the hosts file. 
+  block:
+    - name: Set the hostname
+      hostname:
+        name: "{{ hostname }}"
+
+    - name: Update the hosts file
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ private_ip_address }}\t{{ hostname }}.{{ domainname}} {{ hostname }}"
+        state: present
+      check_mode: yes
+      register: hosts_entry
+
+    - name: Update the hosts file
+      lineinfile:
+        path: /etc/hosts
+        regex: "^{{ private_ip_address }}"
+        line: "{{ private_ip_address }}\t{{ hostname }}.{{ domainname}} {{ hostname }}"
+        state: present
+        backup: yes
+      when: hosts_entry.changed is true
+
+- name: Set timezone to America/Toronto
+  community.general.timezone:
+    name: America/Toronto
+
+- name: Update Profile variables 
+  block: 
+
+  - name: Check or Create  profile.local 
+    file:
+      path: /etc/profile.local
+      owner: root
+      group: root
+      state: touch
+      mode: '0644'
+
+  - name: Add TMOUT variable 
+    blockinfile:
+      path: /etc/profile.local
+      marker: "# {mark} ANSIBLE MANAGED BLOCK - TMOUT"
+      block: |
+        TMOUT=600
+        export TMOUT
+
+  - name: Add CPIC_MAX_CONV variable 
+    blockinfile:
+      path: /etc/profile.local
+      marker: "# {mark} ANSIBLE MANAGED BLOCK - CPIC_MAX_CONV"
+      block: |
+        CPIC_MAX_CONV=2000
+        export CPIC_MAX_CONV
+
+- name: Install baseline packages
+  include_tasks: packages.yml
+
+- name: Mount shared SAP Trans EFS
+  include_tasks: efs-saptrans.yml
+  when: saptrans is defined and saptrans
+...

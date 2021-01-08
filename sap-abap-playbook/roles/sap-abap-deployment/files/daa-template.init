@@ -1,0 +1,10 @@
+DiagnosticsAgent.SID=[[DAA_SID]]
+DiagnosticsAgent.InstanceNumber=[[DAA_SYSNR]]
+DiagnosticsAgent.dasidAdmPassword=[[DAA_PASSWORD]]
+DiagnosticsAgent.SolMan.Connection=[[DAA_SOLMAN]]
+DiagnosticsAgent.SolMan.UseSSL=[[DAA_SOLMAN_SSL]]
+DiagnosticsAgent.SolMan.HostName=[[DAA_SOLMAN_HOSTNAME]]
+DiagnosticsAgent.SolMan.PortNumber=[[DAA_SOLMAN_PORT]]
+
+archives.downloadBasket=[[DOWNLOAD_BASKET]]
+DiagnosticsAgent.SAPJVMVersion=[[DAA_SAPJVM]]

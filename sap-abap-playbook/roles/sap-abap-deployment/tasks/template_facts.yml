@@ -1,0 +1,53 @@
+## Handle Passwords... 
+- name: Handle Password - if the specifc are not set then defaul to master
+  block: 
+
+  - name: Check Master Key Password
+    set_fact:
+      master_key_password: "{{ master_password }}"
+    when: master_key_password is undefined
+
+  - name: Check SA Password
+    set_fact:
+      sa_password: "{{ master_password }}"
+    when: sa_password is undefined
+  
+  - name: Check SAPSA Password
+    set_fact:
+      sapsa_password: "{{ master_password }}"
+    when: sapsa_password is undefined
+
+  - name: Check SAPSR3 Password
+    set_fact:
+      sapsr3_password: "{{ master_password }}"
+    when: sapsr3_password is undefined
+
+  - name: Check SAPSR3DB Password
+    set_fact:
+      sapsr3db_password: "{{ master_password }}"
+    when: sapsr3db_password is undefined
+
+  - name: Check SAPSSO Password
+    set_fact:
+      sapsso_password: "{{ master_password }}"
+    when: sapsso_password is undefined
+
+  - name: Check SSL Password
+    set_fact:
+      ssl_password: "{{ master_password }}"
+    when: ssl_password is undefined
+  
+  - name: Check SAPADM Password
+    set_fact:
+      sapadm_password: "{{ master_password }}"
+    when: sapadm_password is undefined
+
+  - name: Check SIDADM Password
+    set_fact:
+      sidadm_password: "{{ master_password }}"
+    when: sidadm_password is undefined
+
+  - name: Check SYBSID Password
+    set_fact:
+      sybsid_password: "{{ master_password }}"
+    when: sybsid_password is undefined

@@ -1,0 +1,19 @@
+---
+- name: Set the cleanup_install default
+  set_fact:
+    cleanup_install: False
+    when: cleanup_install is undefined
+
+- name: Clean up the SAP installation 
+  file: 
+    path: "{{ sltools_path }}/sap_install"
+    state: absent
+  when: cleanup_install
+
+- name: Clean up the DAA installation 
+  file: 
+    path: "{{ sltools_path }}/daa_install"
+    state: absent
+  when: cleanup_install
+
+...
