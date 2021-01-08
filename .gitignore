@@ -1,0 +1,4 @@
+*.retry
+*.log
+vbox_host.cfg
+.DS_Store
