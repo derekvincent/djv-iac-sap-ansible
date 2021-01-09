@@ -1,5 +1,9 @@
 ---
-## Defaults but can be over ridden. 
+
+- name: Get the master password from the SSM 
+  set_fact: 
+    master_password: "{{ lookup('aws_ssm', {{ master_password_ssm_key }}) }}"
+  ## Defaults but can be over ridden. 
 - name: Set Logistics Tools path 
   set_fact: 
     sltools_path: /sapmnt/sltools
