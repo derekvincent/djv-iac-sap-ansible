@@ -105,11 +105,11 @@
 - name: Copy the aws config file to the root user .aws folder to support cross account S3 access.
   copy:
     src: "{{ role_path }}/files/aws_config"
-      dest: "~/.aws/config"
-      owner: root
-      group: root
-      mode: 0644
-    register: aws_config_file 
+    dest: "~/.aws/config"
+    owner: root
+    group: root
+    mode: 0644
+  register: aws_config_file 
 
 - name: Set the Region in the AWS Config file
   replace:
