@@ -7,7 +7,7 @@
          --name "'$ssm_key'" \
          --output text \
          --query Parameter.Value |
-       ssh-add -q -
+       ssh-add -
     then
       ansible-playbook "$@"
     else
