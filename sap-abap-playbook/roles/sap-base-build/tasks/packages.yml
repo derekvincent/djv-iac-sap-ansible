@@ -14,25 +14,25 @@
     
 
   ## Currrent bug as of 12/25/2020 with the libpython - https://www.suse.com/support/kb/doc/?id=000019818
-  - name: Issue with libpython breaking zypper and cloud resolver 
-    block: 
-    - name: Add an old package lock until resolved
-      community.general.zypper:
-        name: libpython3_6m1_0=3.6.12-3.64.2
-        oldpackage: yes
-        state: present
+  # - name: Issue with libpython breaking zypper and cloud resolver 
+  #   block: 
+  #   - name: Add an old package lock until resolved
+  #     community.general.zypper:
+  #       name: libpython3_6m1_0=3.6.12-3.64.2
+  #       oldpackage: yes
+  #       state: present
       
-    - name: Lock the libpython package
-      shell: zypper al libpython3_6m1_0
+  #   - name: Lock the libpython package
+  #     shell: zypper al libpython3_6m1_0
 
-    - name: Lock the libpython patch
-      shell: zypper al --type patch libpython3_6m1_0
+  #   - name: Lock the libpython patch
+  #     shell: zypper al --type patch libpython3_6m1_0
 
   ## Zypper - Update all packages 
-  # - name: Update all packages with
-  #   community.general.zypper:
-  #     name: '*'
-  #     state: latest
+  - name: Update all packages with
+    community.general.zypper:
+      name: '*'
+      state: latest
   #     update_cache: yes
 
   ## SAP Requirments
