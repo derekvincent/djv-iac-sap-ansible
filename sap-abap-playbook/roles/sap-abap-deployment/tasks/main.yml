@@ -142,31 +142,29 @@
     set_fact: 
       sap_parameter_file: "{{ parameter_file.dest }}"
 
-  - name: Check if SAP is installed
-    stat: 
-      path: /usr/sap/sapservices
-    register: sap_services
+  # - name: Check if SAP is installed
+  #   stat: 
+  #     path: /usr/sap/sapservices
+  #   register: sap_services
 
-  - name: Check /usr/sap/sapservices for SAP SID 
-    shell: "grep -i '{{ sid }}' /usr/sap/sapservices"
-    register: sap_sid_present
-
-  - name: IS SAP INSTALLED?
-    debug:
-      msg: "SAP Present: {{ sap_services.stat.exists }}"
+  # - name: Check /usr/sap/sapservices for SAP SID 
+  #   shell: "grep -i '{{ sid }}' /usr/sap/sapservices"
+  #   register: sap_sid_present
+  #   when: sap_services.stat.exists
 
   - name: Set template facts for the SAP Install Template  
     include_tasks: abap-install.yml
-    when: sap_sid_present is not changed
+    # when: sap_sid_present is not changed and sap_services.stat.exists
     # when: not sap_services.stat.exists 
 
-  - name: Check /usr/sap/sapservices for DAA Agent 
-    shell: "grep -i 'SMDA' /usr/sap/sapservices"
-    register: sap_daa_present
+  # - name: Check /usr/sap/sapservices for DAA Agent 
+  #   shell: "grep -i 'SMDA' /usr/sap/sapservices"
+  #   register: sap_daa_present
+  #   when: sap_services.stat.exists
 
   - name: Set template facts for the SAP Install Template  
     include_tasks: daa-install.yml
-    when: sap_daa_present is not changed
+    # when: sap_daa_present is not changed and sap_services.stat.exists
 
   - name: Run the migration prepare steps
     include_tasks: migration-prep.yml
