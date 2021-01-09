@@ -6,11 +6,6 @@
       owner: root
       group: sapinst
       mode: '0775'
-
-  - name: Check and create if required the .aws directory for root.
-    file: 
-      path: /root/.aws
-      state: directory
   
   - name: Copy Silent installtion temlate file
     copy:

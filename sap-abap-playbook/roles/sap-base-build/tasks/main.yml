@@ -102,6 +102,11 @@
         CPIC_MAX_CONV=2000
         export CPIC_MAX_CONV
 
+  - name: Check and create if required the .aws directory for root.
+    file: 
+      path: /root/.aws
+      state: directory
+      
 - name: Copy the aws config file to the root user .aws folder to support cross account S3 access.
   copy:
     src: "{{ role_path }}/files/aws_config"
