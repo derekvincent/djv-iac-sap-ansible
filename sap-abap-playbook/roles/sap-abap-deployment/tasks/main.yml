@@ -17,21 +17,23 @@
         path: /sapmnt/sltools/SWPM
         state: directory
 
-    # - name: Get list of files from S3
-    #   aws_s3:
-    #     mode: list
-    #     bucket: "{{ sap_software_bucket }}"
-    #     prefix: "{{ sap_software_bucket_path }}"
-    #     marker: "{{ sap_software_bucket_path }}"
-    #   register: s3_bucket_items
+    - name: Get list of files from S3
+      aws_s3:
+        mode: list
+        bucket: "{{ sap_software_bucket }}"
+        prefix: "{{ sap_software_bucket_path }}"
+        marker: "{{ sap_software_bucket_path }}"
+        profile: shared-s3
+      register: s3_bucket_items
 
-    # - name: Download files from S3
-    #   aws_s3:
-    #     mode: get
-    #     bucket: "{{ sap_software_bucket }}"
-    #     object: "{{ item }}"
-    #     dest: "/sapmnt/sltools/software/{{ item|basename }}"
-    #   with_items: "{{ s3_bucket_items.s3_keys }}"
+    - name: Download files from S3
+      aws_s3:
+        mode: get
+        bucket: "{{ sap_software_bucket }}"
+        object: "{{ item }}"
+        dest: "/sapmnt/sltools/software/{{ item|basename }}"
+        profile: shared-s3
+      with_items: "{{ s3_bucket_items.s3_keys }}"
 
     - name: Find SAPCAR file 
       ansible.builtin.find:
@@ -149,17 +151,18 @@
     debug:
       msg: "SAP Present: {{ sap_services.stat.exists }}"
 
-  # - name: Set template facts for the SAP Install Template  
-  #   include_tasks: abap-install.yml
-  #   when: not sap_services.stat.exists 
+  - name: Set template facts for the SAP Install Template  
+    include_tasks: abap-install.yml
+    when: sap_sid_present is not changed
+    # when: not sap_services.stat.exists 
 
   - name: Check /usr/sap/sapservices for DAA Agent 
     shell: "grep -i 'SMDA' /usr/sap/sapservices"
-    register: sap_sid_present
+    register: sap_daa_present
 
   - name: Set template facts for the SAP Install Template  
     include_tasks: daa-install.yml
-    when: sap_sid_present is not changed
+    when: sap_daa_present is not changed
 
   - name: Run the migration prepare steps
     include_tasks: migration-prep.yml
@@ -167,22 +170,4 @@
   - name: Run the migration prepare steps
     include_tasks: cleanup.yml
 
-        
-## Run sapinst
-## 1. Create the sapinst group and assign to root
-## 2. Create a {{ sltools_path}}/sap_install directory
-##    - root:sapinst ownership 
-##    - 775 permisson 
-## 3. Move the param file and adpat to the sap_install dir 
-## 4. Create the start_dir.cd
-##  Change to {{ sltools_path }}/sap_install
-## {{ sltools_path }}/SWPM/sapinst SAPINST_INPUT_PARAMETERS_URL=sap-nw-750-abap-ase.init SAPINST_EXECUTE_PRODUCT_ID=NW_ABAP_OneHost:NW750.SYB.ABAP SAPINST_SKIP_DIALOGS=true SAPINST_START_GUISERVER=false
-
-
-### NOTE ###
-### For main ainsbile detect if the disk size has change and do a pvextend on the device... 
-##  - pvresize /dev/nvme1n1
-### - xfs_growfs <<mount point>> 
-###   - ie. xfs_growfs /sybase/ECD
-## ref: https://aws.amazon.com/premiumsupport/knowledge-center/create-lv-on-ebs-volume/
 ...
