@@ -1,6 +1,7 @@
 ---
 sap_software_bucket: sapm-shared-service-prod-us-east-1-sap-software
-sap_software_bucket_path: nw75-abap/
+sap_software_bucket_path: bs2013-ecc607sr2-ase/
+cleanup_install: true
 
 ##SAP 
 sid: DEV

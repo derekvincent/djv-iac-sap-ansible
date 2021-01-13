@@ -33,7 +33,7 @@
   block:
     - name: Define mount_options 
       set_fact: 
-        mount_option: "_netdev,nofail,"
+        mount_option: "default,_netdev,nofail,"
 
     - name: Set TLS option 
       set_fact: 

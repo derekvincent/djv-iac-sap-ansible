@@ -1,8 +1,4 @@
 ---
-- name: Set the cleanup_install default
-  set_fact:
-    cleanup_install: False
-    when: cleanup_install is undefined
 
 - name: Clean up the SAP installation 
   file: 

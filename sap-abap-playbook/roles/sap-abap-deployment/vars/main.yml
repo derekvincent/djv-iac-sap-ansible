@@ -1,0 +1,45 @@
+## Role Vars for SAP Deploments
+
+cleanup_install: False
+start_dir_cd : ["{{ sltools_path}}/SWPM", ]
+
+sap_install_control : {
+  "sap_abap_750_ase" :
+    {
+      "control_file" : "sap-nw-750-abap-ase.init",
+      "product_id" : "NW_ABAP_OneHost:NW750.SYB.ABAP",
+      "export_dvd" : [
+        {
+          filename: " 51050829_3.ZIP",
+          target: " 51050829_3",
+          type: "zip",
+          export_folders: ["DATA_UNITS/EXPORT_1", "DATA_UNITS/EXPORT_2", "DATA_UNITS/EXPORT_3",
+                            "DATA_UNITS/EXPORT_4", "DATA_UNITS/EXPORT_5", "DATA_UNITS/EXPORT_6"] 
+        }
+      ]
+    },
+
+    "sap_bs2013_erp607SR2_ase" :
+    {
+      "control_file" : "sap-bs2013-erp607SR2-ase.init",
+      "product_id" : "NW_ABAP_OneHost:BS2013SR2.ERP607SR2.SYB.PD",
+      "export_dvd" : [
+          {
+            filename: "51050882_EXP1_part1.exe",
+            target: "51050882_EXP1_part1",
+            type: "rar",
+            export_folders: ["DATA_UNITS/EXPORT_1", "DATA_UNITS/EXPORT_2", "DATA_UNITS/EXPORT_3",
+                             "DATA_UNITS/EXPORT_4", "DATA_UNITS/EXPORT_5", "DATA_UNITS/EXPORT_6"] 
+          },
+          {
+            filename: "51050882_3.ZIP",
+            target: "51050882_3",
+            type: "zip",
+            export_folders: ["DATA_UNITS/EXPORT_7", "DATA_UNITS/EXPORT_8", "DATA_UNITS/EXPORT_9",
+                             "DATA_UNITS/EXPORT_10", "DATA_UNITS/EXPORT_11"] 
+          },
+      ]
+
+
+    }
+}

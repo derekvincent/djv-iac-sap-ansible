@@ -35,6 +35,7 @@
         mode: get
         bucket: "{{ sap_software_bucket }}"
         object: "{{ item }}"
+        overwrite: different
         dest: "/sapmnt/sltools/software/{{ item|basename }}"
         profile: shared-s3
       with_items: "{{ s3_bucket_items.s3_keys }}"
@@ -53,38 +54,10 @@
         remote_src: yes
       when: sapcar_source.files
 
-    - name: Handle Export DVD expansion
-      block: 
-
-      - name: Read the software manifest yaml file
-        command:
-          cmd: "cat {{ sltools_path }}/software/manifest.yml"
-        register: raw_manifest
-
-      - name: Set the software_manifest fact from the downloaded file. 
-        set_fact:
-          software_manifest: "{{ raw_manifest.stdout | from_yaml }}"
-
-      - name: Create the software folder to download the SAP software
-        file:
-          path: "{{ sltools_path }}/software/export_dvd"
-          state: directory
-          owner: root
-          group: root
-          mode: '0775'
-
-      - name: Extract the Export DVD via ZIP 
-        unarchive:
-          src: "{{ sltools_path }}/software/{{ software_manifest.abap_export.filename }}"
-          dest: "{{ sltools_path }}/software/export_dvd"
-          remote_src: yes
-        when: software_manifest.abap_export.filetype == "zip"
-
-      # - name: Extract the Export DVD via RAR 
-      #   command: "unrar x {{ sltools_path }}/software/{{ software_manifest.java_export.filename }}"
-      #   args:
-      #     chdir: "{{ sltools_path }}/software/export_dvd"
-      #   when: software_manifest.java_export.filetype == "rar"
+    - name: Expand Export Archives
+      include_tasks: expand-export-archives.yml
+      loop: "{{ sap_target.export_dvd }}"
+      when: sap_target.export_dvd is defined and sap_target.export_dvd
 
     - name: Find SWPM in the sltools software folder
       ansible.builtin.find:
@@ -99,10 +72,6 @@
         chdir: /sapmnt/sltools/SWPM
       when: swpm_source.files
       register: swpm_expand
-
-    - name: SWPM Expand Return
-      debug:
-        msg: "{{ swpm_expand.rc }}"
 
 ## Preapare for the Install 
 - name: Prepare for the Install
@@ -128,10 +97,9 @@
       group: sapinst
       mode: '0775'
 
-  ## This will require a bunch of madness to figure out what one we are doing... 
   - name: Copy Silent installtion temlate file
     copy:
-      src: "{{ role_path }}/files/sap-nw-750-abap-ase.init"
+      src: "{{ role_path }}/files/{{ sap_target.control_file }}"
       dest: "{{ sltools_path }}/sap_install"
       owner: root
       group: root

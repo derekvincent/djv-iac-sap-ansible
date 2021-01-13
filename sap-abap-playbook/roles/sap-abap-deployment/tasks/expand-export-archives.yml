@@ -1,0 +1,30 @@
+---
+
+- name: Expand ZIP Archives 
+  block: 
+  - name: Create the software folder to download the SAP software
+    file:
+      path: "{{ sltools_path }}/software/{{ item.target }}"
+      state: directory
+      owner: root
+      group: root
+      mode: '0775'
+    when: item.type == "zip"
+
+  - name: Extract the Export DVD via ZIP 
+    unarchive:
+      src: "{{ sltools_path }}/software/{{ item.filename }}"
+      dest: "{{ sltools_path }}/software/{{ item.target }}"
+      remote_src: yes
+    when: item.type == "zip"
+
+- name: Expand RAR Archives
+  block:
+  - name: Extract the Export DVD via RAR 
+    command: "unar -f {{ sltools_path }}/software/{{ item.filename }}"
+    args:
+      chdir: "{{ sltools_path }}/software/"
+    when: item.type == "rar"
+
+
+...
