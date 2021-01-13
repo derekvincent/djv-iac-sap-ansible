@@ -3,11 +3,15 @@
 - name: Get the master password from the SSM 
   set_fact: 
     master_password: "{{ lookup('aws_ssm', master_password_ssm_key) }}"
-  ## Defaults but can be over ridden. 
+
 - name: Set Logistics Tools path 
   set_fact: 
     sltools_path: /sapmnt/sltools
   when: sltools_path is undefined
+
+- name: Set Install Target details
+  set_fact:
+    sap_target: "{{ sap_install_control[sap_install_target] }}"
 
 - name: Setup Installation environment
   block:
