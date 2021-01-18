@@ -19,9 +19,15 @@
     label: "{{ item.path }}"
   when: ocs_directories.files is iterable
 
-- name: Install Commvault Deps
+- name: Install Commvault Deps - libncurses5
   community.general.zypper:
-    name: libncurses5, device-mapper
+    name: libncurses5
+    force: yes
+    state: present
+
+- name: Install Commvault Deps - device-mapper
+  community.general.zypper:
+    name: device-mapper
     force: yes
     state: present
 
@@ -34,7 +40,7 @@
     dest: "/tmp/{{ commvault_agent }}"
     profile: "{{ s3_profile }}"
 
-- name: Install the Agnet
+- name: Install the Agent
   community.general.zypper:
     name: "/tmp/{{ commvault_agent }}"
     disable_gpg_check: yes
