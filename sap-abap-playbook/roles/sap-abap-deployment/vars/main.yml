@@ -14,8 +14,9 @@ sap_install_control : {
           filename: "51050829_3.ZIP",
           target: "51050829_3",
           type: "zip",
-          export_folders: ["DATA_UNITS/EXPORT_1", "DATA_UNITS/EXPORT_2", "DATA_UNITS/EXPORT_3",
-                            "DATA_UNITS/EXPORT_4", "DATA_UNITS/EXPORT_5", "DATA_UNITS/EXPORT_6"] 
+          # export_folders: ["DATA_UNITS/EXPORT_1", "DATA_UNITS/EXPORT_2", "DATA_UNITS/EXPORT_3",
+                            # "DATA_UNITS/EXPORT_4", "DATA_UNITS/EXPORT_5", "DATA_UNITS/EXPORT_6"] 
+          export_folders: [""]                  
         }
       ]
     },
