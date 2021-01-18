@@ -22,4 +22,4 @@
       chdir: "{{ sltools_path }}/sap_install"
     async: 14400
     poll: 30
-    when: skip_sap_install
+    when: not skip_sap_install
