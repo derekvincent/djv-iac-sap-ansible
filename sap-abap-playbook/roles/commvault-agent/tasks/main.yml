@@ -2,34 +2,43 @@
 - name: Find the OCS_16 directories un the /sybase folder
   find: 
     paths: /sybase
-    patterns: OCS_16
+    patterns: OCS-16*
     file_type: directory
     recurse: yes
   register: ocs_directories
 
-- name: Test Return paths
-  debug: var=ocs_directories.files
-
-- name: Copy the ocs.cfg file to the OCS_16 directories
+- name: Copy the ocs.cfg file to the OCS_16/config directories
   copy:
     src: "{{ role_path }}/files/ocs.cfg"
-    dst: item.path
-  loop: ocs_directories.files
+    dest: "{{ item.path }}/config"
+    owner: "{{ item.pw_name }}"
+    group: "{{ item.gr_name }}"
+    mode: 0640
+  loop: "{{ ocs_directories.files }}"
+  loop_control:
+    label: "{{ item.path }}"
   when: ocs_directories.files is iterable
 
-- name: Get the Commvault Install Agnet File 
+- name: Install Commvault Deps
+  community.general.zypper:
+    name: libncurses5 device-mapper
+    force: yes
+    state: present
+
+- name: Get the Commvault Install Agent File 
   aws_s3:
     mode: get
     bucket: "{{ commvault_bucket }}"
     object: "{{ commvault_folder }}/{{ commvault_agent }}"
     overwrite: different
-    dest: "/tmp/"
+    dest: "/tmp/{{ commvault_agent }}"
     profile: "{{ s3_profile }}"
 
 - name: Install the Agnet
   community.general.zypper:
     name: "/tmp/{{ commvault_agent }}"
     disable_gpg_check: yes
+    force: yes
     state: present
 
 ...
