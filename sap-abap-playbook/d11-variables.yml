@@ -1,8 +1,8 @@
 ---
 sap_software_bucket: sapm-shared-service-prod-us-east-1-sap-software
-sap_software_bucket_path: bs2013-ecc607sr2-ase/
+sap_software_bucket_path: nw75-abap/
 cleanup_install: true
-sap_install_target: sap_bs2013_erp607SR2_ase
+sap_install_target: sap_abap_750_ase
 
 ##SAP 
 sid: DEV
@@ -22,13 +22,4 @@ db_hostname: eccdev
 userstore_hostname: eccdev 
 ### Passwords
 master_password_ssm_key: /sapm/sap-dev/DEV/master_password
-# master_key_password: 
-# sa_password: 
-# SAPSA_PASSWORD
-# SAPSR3_PASSWORD
-# sapsr3db_password
-# SAPSSO_PASSWORD
-# ssl_password
-# sapadm_password
-# sidadm_password
-# sybsid_password
+
