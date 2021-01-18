@@ -41,10 +41,11 @@
     profile: "{{ s3_profile }}"
 
 - name: Install the Agent
-  community.general.zypper:
-    name: "/tmp/{{ commvault_agent }}"
-    disable_gpg_check: yes
-    force: yes
-    state: present
+  command: "rpm -i --force --nodeps /tmp/{{ commvault_agent }}"
+  # community.general.zypper:
+  #   name: "/tmp/{{ commvault_agent }}"
+  #   disable_gpg_check: yes
+  #   force: yes
+  #   state: present
 
 ...
