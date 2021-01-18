@@ -25,10 +25,17 @@
       command: swapon '{{ swap_device_link }}'
       when: swap_enabled.stdout is not search(swap_device_link)
 
+    - name: Get Swap uuid
+      command: "blkid -s UUID -o value {{ swap_device_link }}"
+      register: disk_blkid
+      changed_when: False
+      check_mode: no
+
     - name: Add swap to mount tab
       mount:
         fstype: swap 
-        src: '{{ swap_device_link }}'
+        # src: '{{ swap_device_link }}'
+        src: 'UUID={{ disk_blkid.stdout }}'
         path: none
         opts: defaults 
         passno: '0' 
@@ -102,31 +109,33 @@
         CPIC_MAX_CONV=2000
         export CPIC_MAX_CONV
 
+- name: Add a AWS profile for the SHARE S3 bucket access.
+  block:
   - name: Check and create if required the .aws directory for root.
     file: 
       path: /root/.aws
       state: directory
-      
-- name: Copy the aws config file to the root user .aws folder to support cross account S3 access.
-  copy:
-    src: "{{ role_path }}/files/aws_config"
-    dest: "~/.aws/config"
-    owner: root
-    group: root
-    mode: 0644
-  register: aws_config_file 
+        
+  - name: Copy the aws config file to the root user .aws folder to support cross account S3 access.
+    copy:
+      src: "{{ role_path }}/files/aws_config"
+      dest: "~/.aws/config"
+      owner: root
+      group: root
+      mode: 0644
+    register: aws_config_file 
 
-- name: Set the Region in the AWS Config file
-  replace:
-    path: "{{ aws_config_file.dest }}"
-    regexp: '\[\[REGION\]\]'
-    replace: "{{ region }}"
+  - name: Set the Region in the AWS Config file
+    replace:
+      path: "{{ aws_config_file.dest }}"
+      regexp: '\[\[REGION\]\]'
+      replace: "{{ region }}"
 
-- name: Set the Role ARN in the AWS Config file
-  replace:
-    path: "{{ aws_config_file.dest }}"
-    regexp: '\[\[SHARED_SERVICES_BUCKET_ARN\]\]'
-    replace: "{{ shared_s3_role_arn }}"
+  - name: Set the Role ARN in the AWS Config file
+    replace:
+      path: "{{ aws_config_file.dest }}"
+      regexp: '\[\[SHARED_SERVICES_BUCKET_ARN\]\]'
+      replace: "{{ shared_s3_role_arn }}"
 
 - name: Install baseline packages
   include_tasks: packages.yml

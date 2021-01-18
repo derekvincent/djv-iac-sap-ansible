@@ -16,10 +16,17 @@
     fstype: "{{ item.fstype }}"
     dev: "{{ device_link }}"
 
+- name: Get the block device uuid
+  command: "blkid -s UUID -o value {{ device_link }}"
+  register: disk_blkid
+  changed_when: False
+  check_mode: no
+
 - name: Add mountpoints to fstab" 
   mount: 
     path: "{{ item.mount }}"
-    src: "{{ device_link }}"
+    # src: "{{ device_link }}"
+    src: 'UUID={{ disk_blkid.stdout }}'
     fstype: "{{ item.fstype }}"
     dump: "1"
     passno: "2"

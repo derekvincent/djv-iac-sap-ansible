@@ -80,7 +80,7 @@
   - name: Mount the EFS file system 
     mount: 
       path: /usr/sap/trans
-      src: "{{ efs_mount.filesystem_host }}"
+      src: "{{ efs_mount.filesystem_id }}"
       fstype: efs
       opts: "{{ mount_option }}"
       dump: "0"
