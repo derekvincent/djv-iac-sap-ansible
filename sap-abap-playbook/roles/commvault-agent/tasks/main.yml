@@ -21,7 +21,7 @@
 
 - name: Install Commvault Deps
   community.general.zypper:
-    name: libncurses5 device-mapper
+    name: libncurses5, device-mapper
     force: yes
     state: present
 
