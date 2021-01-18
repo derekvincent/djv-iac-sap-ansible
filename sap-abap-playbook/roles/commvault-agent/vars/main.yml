@@ -1,0 +1,4 @@
+commvault_bucket: sapm-shared-service-prod-us-east-1-sap-software
+commvault_agent: custom-linux.Instance001-11.0.0-80.200.0.2779330.200.3025826.x86_64.rpm
+commvault_folder: commvault-agent 
+s3_profile: shared-s3

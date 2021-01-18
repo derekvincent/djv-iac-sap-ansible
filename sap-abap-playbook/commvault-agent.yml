@@ -1,0 +1,6 @@
+---
+- hosts: tag_app_sap
+  #gather_facts: no
+
+  roles:
+    - commvault-agent

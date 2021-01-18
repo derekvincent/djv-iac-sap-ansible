@@ -10,10 +10,26 @@
 - name: Test Return paths
   debug: var=ocs_directories.files
 
-# - name: Copy the ocs.cfg file to the OCS_16 directories
-#   copy:
-#     src: "{{ role_path }}/files/ocs.cfg"
-#     dst: item.path
-#   loop: ocs_directories.files
-#   when: ocs_directories.files is iterable
+- name: Copy the ocs.cfg file to the OCS_16 directories
+  copy:
+    src: "{{ role_path }}/files/ocs.cfg"
+    dst: item.path
+  loop: ocs_directories.files
+  when: ocs_directories.files is iterable
+
+- name: Get the Commvault Install Agnet File 
+  aws_s3:
+    mode: get
+    bucket: "{{ commvault_bucket }}"
+    object: "{{ commvault_folder }}/{{ commvault_agent }}"
+    overwrite: different
+    dest: "/tmp/"
+    profile: "{{ s3_profile }}"
+
+- name: Install the Agnet
+  community.general.zypper:
+    name: "/tmp/{{ commvault_agent }}"
+    disable_gpg_check: yes
+    state: present
+
 ...
