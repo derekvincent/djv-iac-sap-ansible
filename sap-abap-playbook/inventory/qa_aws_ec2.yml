@@ -4,7 +4,7 @@ regions:
 
 filters:
   # All instances with their `Environment` tag set to `dev`
-  tag:sapm:environment: dev
+  tag:sapm:environment: qa
 
 keyed_groups:
   # add hosts to tag_Name_value groups for each aws_ec2 host's tags.Name variable
@@ -19,7 +19,7 @@ keyed_groups:
     separator: "_"
   - key: tags['sapm:sap:type']
     prefix: tag_sap_type
-    separator: "_"    
+    separator: "_"
 
 hostnames:
 # a list in order of precedence for hostname variables.
