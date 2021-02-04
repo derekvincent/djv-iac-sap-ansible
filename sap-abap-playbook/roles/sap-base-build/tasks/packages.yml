@@ -101,7 +101,7 @@
       - "libz1-32bit"
       - "libuuid1-32bit"
     state: present
-  when: sap_app_type.exists and sap_app_type == "ads"
+  when: sap_app_type == "ads"
 
 - name: Reboot After installation and updates
   block:
