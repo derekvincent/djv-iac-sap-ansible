@@ -78,6 +78,31 @@
         disable_gpg_check: yes
         state: present
 
+    ## Install the AWS Data Provider for SAP 
+    - name: Install the GPG  Key 
+      command: "rpm --import https://aws-sap-data-provider.s3.amazonaws.com/Installers/RPM-GPG-KEY-AWS"
+
+    - name: Install the AWS Data Provider
+      community.general.zypper:
+        name: 'https://aws-sap-data-provider.s3.amazonaws.com/Installers/aws-sap-dataprovider-sles.x86_64.rpm'
+        state: present 
+
+  # If the System is an Adobe Document Service then additional package requirments are needed. Note 2029940
+- name: Install SAP ADS additional packages Note ()
+  community.general.zypper: 
+    name: 
+      - "glibc-32bit"
+      - "glibc-i18ndata"
+      - "glibc-locale-32bit"
+      - "libgcc_s1-32bit"
+      - "libidn11-32bit"
+      - "libX11-6-32bit"
+      - "libcurl4-32bit"
+      - "libz1-32bit"
+      - "libuuid1-32bit"
+    state: present
+  when: sap_app_type.exists and sap_app_type == "ads"
+
 - name: Reboot After installation and updates
   block:
     - name: Check if a reboot is needed on all after updates
