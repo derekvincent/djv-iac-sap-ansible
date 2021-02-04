@@ -1,0 +1,25 @@
+---
+sap_software_bucket: sapm-shared-service-prod-us-east-1-sap-software
+sap_software_bucket_path: nw75-abap/
+cleanup_install: true
+sap_install_target: sap_abap_750_ase
+
+##SAP 
+sid: QAS
+domain_name: aws.domain.com
+
+### ASCS 
+ascs_sysnr: "01"
+ascs_hostname: eccqa
+scs_hostname: eccqa
+
+### CI
+ci_sysnr: "00"
+ci_hostname: eccqa
+
+### ASE
+db_hostname: eccqa
+userstore_hostname: eccqa
+### Passwords
+master_password_ssm_key: /sapm/sap-qa/QAS/master_password
+
