@@ -33,6 +33,7 @@
     path: "{{ logical_volume.mount }}"
     src: "/dev/vg-{{ item.name }}/lv-{{ logical_volume.name }}"
     fstype: "{{ logical_volume.fstype }}"
+    opts: "noatime,nodiratime,logbufs=8"
     dump: "1"
     passno: "2"
     state: mounted
