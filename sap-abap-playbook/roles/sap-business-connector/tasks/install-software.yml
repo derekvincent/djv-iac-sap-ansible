@@ -43,6 +43,8 @@
     command: "./BCServer48_amd64.bin -i silent"
     args:
       chdir: "{{ software_path }}/SAP_BUSIN.CONN__str__4.8_LNX32__and__64_/SAPBC48_LNX64/"
+    register: result
+    faile_when: result.rc >= 2
     async: 3600
     poll: 30
     when: not skip_install  

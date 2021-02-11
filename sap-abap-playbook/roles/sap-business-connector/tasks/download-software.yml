@@ -21,7 +21,7 @@
         bucket: "{{ sap_software_bucket }}"
         object: "{{ item }}"
         overwrite: different
-        dest: "{{ software_path }}{{ item|basename }}"
+        dest: "{{ software_path }}/{{ item|basename }}"
         profile: shared-s3
       with_items: "{{ s3_bucket_items.s3_keys }}"
 
