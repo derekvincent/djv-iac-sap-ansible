@@ -95,7 +95,7 @@
 - name: Install SAP BC Hotfixes
   block:
   - name: Find the Core Hotfx
-    ansible.bultin.find:
+    ansible.builtin.find:
       path: "{{ software_path }}"
       patterns: 'BC48CoreFixP_*-20002978.ZIP'
     register: sapbc_core_fp_file
@@ -108,7 +108,7 @@
     when: sapbc_core_fp_file.files
 
   - name: Find the Service Hot Fix
-    ansible.bultin.find:
+    ansible.builtin.find:
       path: "{{ software_path }}"
       patterns: 'BC48SRP_*-20002978.ZIP'
     register: sapbc_service_fp_file
