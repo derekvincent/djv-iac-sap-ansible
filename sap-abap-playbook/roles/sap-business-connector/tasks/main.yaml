@@ -108,3 +108,9 @@
         post_reboot_delay: 30
         test_command: uptime
       when: linux_reboot_required_file.stat.exists and reboot_after_patch is true
+
+- name: Download software
+  include_tasks: download-software.yml
+
+- name: Install software
+  include_tasks: install-software.yml
