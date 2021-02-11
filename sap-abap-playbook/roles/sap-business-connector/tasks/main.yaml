@@ -1,0 +1,110 @@
+---
+- name: Set Logistics Tools path 
+  set_fact: 
+    software_path: /tmp/software
+  when: software_path is undefined
+
+## Set the Machine hostname.
+- name: Set the hostname and update the hosts file. 
+  block:
+    - name: Set the hostname
+      hostname:
+        name: "{{ hostname }}"
+
+    - name: Update the hosts file
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ private_ip_address }}\t{{ hostname }}.{{ domainname}} {{ hostname }}"
+        state: present
+      check_mode: yes
+      register: hosts_entry
+
+    - name: Update the hosts file
+      lineinfile:
+        path: /etc/hosts
+        regex: "^{{ private_ip_address }}"
+        line: "{{ private_ip_address }}\t{{ hostname }}.{{ domainname}} {{ hostname }}"
+        state: present
+        backup: yes
+      when: hosts_entry.changed is true
+
+- name: Set timezone to America/Toronto
+  community.general.timezone:
+    name: America/Toronto
+
+- name: Add a AWS profile for the SHARE S3 bucket access.
+  block:
+  - name: Check and create if required the .aws directory for root.
+    file: 
+      path: /root/.aws
+      state: directory
+        
+  - name: Copy the aws config file to the root user .aws folder to support cross account S3 access.
+    copy:
+      src: "{{ role_path }}/files/aws_config"
+      dest: "~/.aws/config"
+      owner: root
+      group: root
+      mode: 0644
+    register: aws_config_file 
+
+  - name: Set the Region in the AWS Config file
+    replace:
+      path: "{{ aws_config_file.dest }}"
+      regexp: '\[\[REGION\]\]'
+      replace: "{{ region }}"
+
+  - name: Set the Role ARN in the AWS Config file
+    replace:
+      path: "{{ aws_config_file.dest }}"
+      regexp: '\[\[SHARED_SERVICES_BUCKET_ARN\]\]'
+      replace: "{{ shared_s3_role_arn }}"
+
+- name: Package Management 
+  block: 
+
+  ## Zypper - Update all packages 
+  - name: Update all packages with
+    community.general.zypper:
+      name: '*'
+      state: latest
+
+  - name: Install Required Packages
+    community.general.zypper:
+      name: 
+        - unzip
+        - nfs-client
+        - insserv
+        - glibc
+        - glibc-32bit
+        - java
+      state: latest      
+
+  - name: Install Amazon SSM Agent
+    community.general.zypper:
+      disable_gpg_check: yes
+      name: 'https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm'
+      state: present
+
+  ## Start the SSM Agent service and ensure it starts on boot
+  - name: Make sure Amazon SSM Agent service is running
+    systemd:
+      state: started
+      enabled: yes
+      name: amazon-ssm-agent      
+
+- name: Reboot After installation and updates
+  block:
+    - name: Check if a reboot is needed on all after updates
+      register: linux_reboot_required_file
+      stat: path=/boot/do_purge_kernels get_md5=no
+
+    - name: Reboot the Server if kernel updated  
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: linux_reboot_required_file.stat.exists and reboot_after_patch is true

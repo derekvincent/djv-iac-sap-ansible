@@ -1,0 +1,156 @@
+---
+
+- name: Install SAPCAR 
+  block:
+  - name: Find SAPCAR file 
+    ansible.builtin.find:
+      paths: "{{ software_path }}"
+      patterns: 'SAPCAR*,sapcar*'
+    register: sapcar_source
+  
+  - name: Copy SAPCAR to /usr/local/bin and set it executable
+    copy: 
+      src: "{{ sapcar_source.files[0].path }}" 
+      dest: /usr/local/bin/sapcar
+      mode: '0744'
+      remote_src: yes
+    when: sapcar_source.files
+
+- name: Install SAP Business Connector
+  block:
+  - name: Extract the SAP BC install media 
+    unarchive:
+      src: "{{ software_path }}/{{ sapbc_inst_filename }}"
+      dest: "{{ software_path }}"
+      remote_src: yes
+    when: not skip_install 
+
+  - name: Extract the SAP BC server install media 
+    unarchive:
+      src: "{{ software_path }}/SAP_BUSIN.CONN__str__4.8_LNX32__and__64_/SAPBC48_LNX64/BCServer48_amd64.zip"
+      dest: "{{ software_path }}/SAP_BUSIN.CONN__str__4.8_LNX32__and__64_/SAPBC48_LNX64/"
+      remote_src: yes
+    when: not skip_install 
+  
+
+  - name: Set the execute flag on the SAP BC Server installer.
+    ansible.builtin.file:
+      path: "{{ software_path }}/SAP_BUSIN.CONN__str__4.8_LNX32__and__64_/SAPBC48_LNX64/BCServer48_amd64.bin"
+      mode: 'u+x'
+    when: not skip_install 
+
+  - name: Install the SAP BC Server 
+    command: "./BCServer48_amd64.bin -i silent"
+    args:
+      chdir: "{{ software_path }}/SAP_BUSIN.CONN__str__4.8_LNX32__and__64_/SAPBC48_LNX64/"
+    async: 3600
+    poll: 30
+    when: not skip_install  
+  
+  - name: Copy over the license file before startup
+    copy:
+      src: "{{ role_path }}/files/server.key"
+      dest: "{{ sapbc_dir }}/config"
+      owner: root
+      group: root
+      mode: 0644
+    register: bc_key_file 
+
+  - name: Set the Region in the AWS Config file
+    replace:
+      path: "{{ bc_key_file.dest }}"
+      regexp: '\[\[LICENSE\]\]'
+      replace: "{{ sapbc_license }}"
+  
+- name: Update the JVM
+  block:
+  - name: Find the new JVM 
+    ansible.builtin.find:
+      paths: "{{ software_path }}"
+      patterns: 'SAPJVM*.SAR'
+    register: sapjvm_source
+  
+  - name: Extract the SAP JVM 
+    unarchive:
+      src: "{{ sapjvm_source.files[0].path }}"
+      dest: "{{ software_path }}"
+      remote_src: yes
+
+  - name: Find the new JVM 
+    ansible.builtin.find:
+      paths: "{{ software_path }}"
+      patterns: 'sapjvm_*'
+    register: sapjvm_folder
+
+  - name: Remove the old JVM
+    file: 
+      path: "{{ sapbc_dir }}/jvm"
+      state: absent
+    when: sapjvm_folder.files
+
+  - name: Move the JVM to the SAP BC folder
+    command: "mv {{ sapjvm_folder.files[0].path }} {{ sapbc_dir }}/jvm"
+    when: sapjvm_folder.files
+
+- name: Install SAP BC Hotfixes
+  block:
+  - name: Find the Core Hotfx
+    ansible.bultin.find:
+      path: "{{ software_path }}"
+      patterns: 'BC48CoreFixP_*-20002978.ZIP'
+    register: sapbc_core_fp_file
+  
+  - name: Install the Core Hotfix
+    ansible.builtin.unarchive:
+      src: "{{ sapbc_core_fp_file.files[0].path }}"
+      dest: "{{ sapbc_dir }}"
+      remote_src: yes
+    when: sapbc_core_fp_file.files
+
+  - name: Find the Service Hot Fix
+    ansible.bultin.find:
+      path: "{{ software_path }}"
+      patterns: 'BC48SRP_*-20002978.ZIP'
+    register: sapbc_service_fp_file
+
+  - name: Install the Hotfix
+    ansible.builtin.unarchive:
+      src: "{{ sapbc_service_fp_file.files[0].path }}"
+      dest: "{{ sapbc_dir }}replicate/inbound/"
+      remote_src: yes
+    when: sapbc_service_fp_file.files
+
+- name: Make adjustments to the server.sh file
+  block:
+  - name:
+    replace:
+      path: "{{ sal_bc_dir }}/bin/server.sh"
+      regexp: 'JAVA_MAX_MEM=256M'
+      replace: 'JAVA_MAX_MEM=512M'
+
+  - name: Update Class path after HF14 is installed 
+    replace:
+      path: "{{ sal_bc_dir }}/bin/server.sh"
+      regexp: 'CLASSPATH=${CLASSPATH}:${B2B_ROOT}/lib/client.jar:${B2B_ROOT}/lib/iaik_jce.jar:${B2B_ROOT}/lib/mail.jar'
+      replace: 'CLASSPATH=${CLASSPATH}:${B2B_ROOT}/lib/iaik_cms.jar:${B2B_ROOT}/lib/jdsr.jar:${B2B_ROOT}/lib/iaik_ssl.jar:${B2B_ROOT}/lib/client.jar:${B2B_ROOT}/lib/iaik_jce.jar:${B2B_ROOT}/lib/mail.jar'
+
+- name: Install the SAPBC utilities 
+  block:
+  - name: Place the zip files in the BC server utilities folder 
+    unarchive: 
+      src: "{{ software_path }}/BC48UtilsP_4-20007203.ZIP"
+      dest: "{{ sapbc_dir }}utilities/"
+  
+  - name: Unarchive the startupstop.zip 
+    unarchive: 
+      src: "{{ sapbc_dir }}utilities/startupstop_v21.zip"
+      dest: "{{ sapbc_dir }}utilities/startupstop/"
+
+  - name: Copy the bcserver.sh to the /etc/init.d folder
+    command: "cp {{ sapbc_dir }}utilities/startupstop/bcserver.sh /etc/init.d/"
+
+  - name: Enable the bcserver.sh service 
+    command: "systemctl enable /etc/init.d/bcserver.sh"
+
+  - name: Start the bcserver.sh service
+    command: "/etc/init.d/bcserver.sh start"

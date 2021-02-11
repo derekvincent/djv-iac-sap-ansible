@@ -1,0 +1,27 @@
+
+- name: Setup Installation environment
+  block:
+    - name: Create the software folder to download the SAP software
+      file:
+        path: "{{ software_path }}"
+        state: directory
+
+    - name: Get list of files from S3
+      aws_s3:
+        mode: list
+        bucket: "{{ sap_software_bucket }}"
+        prefix: "{{ sap_software_bucket_path }}"
+        marker: "{{ sap_software_bucket_path }}"
+        profile: shared-s3
+      register: s3_bucket_items
+
+    - name: Download files from S3
+      aws_s3:
+        mode: get
+        bucket: "{{ sap_software_bucket }}"
+        object: "{{ item }}"
+        overwrite: different
+        dest: "{{ software_path }}{{ item|basename }}"
+        profile: shared-s3
+      with_items: "{{ s3_bucket_items.s3_keys }}"
+

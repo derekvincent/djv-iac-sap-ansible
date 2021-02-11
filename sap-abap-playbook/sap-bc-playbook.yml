@@ -1,0 +1,8 @@
+---
+- hosts: tag_app_sap
+  tasks:
+      - name: Wait for 600 seconds for connection to be available
+        wait_for_connection:
+
+  roles:
+    - sap-business-connector
