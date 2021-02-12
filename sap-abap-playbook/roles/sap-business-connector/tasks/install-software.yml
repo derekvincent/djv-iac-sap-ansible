@@ -44,7 +44,7 @@
     args:
       chdir: "{{ software_path }}/SAP_BUSIN.CONN__str__4.8_LNX32__and__64_/SAPBC48_LNX64/"
     register: result
-    faile_when: result.rc >= 2
+    failed_when: result.rc >= 2
     async: 3600
     poll: 30
     when: not skip_install  
@@ -73,10 +73,7 @@
     register: sapjvm_source
   
   - name: Extract the SAP JVM 
-    unarchive:
-      src: "{{ sapjvm_source.files[0].path }}"
-      dest: "{{ software_path }}"
-      remote_src: yes
+    command: "/usr/local/bin/sapcar -xvf {{ sapjvm_source.files[0].path }} -R {{ software_path }}"
 
   - name: Find the new JVM 
     ansible.builtin.find:
@@ -126,27 +123,39 @@
   block:
   - name:
     replace:
-      path: "{{ sal_bc_dir }}/bin/server.sh"
+      path: "{{ sapbc_dir }}/bin/server.sh"
       regexp: 'JAVA_MAX_MEM=256M'
       replace: 'JAVA_MAX_MEM=512M'
 
   - name: Update Class path after HF14 is installed 
     replace:
-      path: "{{ sal_bc_dir }}/bin/server.sh"
+      path: "{{ sapbc_dir }}/bin/server.sh"
       regexp: 'CLASSPATH=${CLASSPATH}:${B2B_ROOT}/lib/client.jar:${B2B_ROOT}/lib/iaik_jce.jar:${B2B_ROOT}/lib/mail.jar'
       replace: 'CLASSPATH=${CLASSPATH}:${B2B_ROOT}/lib/iaik_cms.jar:${B2B_ROOT}/lib/jdsr.jar:${B2B_ROOT}/lib/iaik_ssl.jar:${B2B_ROOT}/lib/client.jar:${B2B_ROOT}/lib/iaik_jce.jar:${B2B_ROOT}/lib/mail.jar'
 
 - name: Install the SAPBC utilities 
   block:
+  - name: Create the SAP BC utilities folder
+    file:
+      path: "{{ sapbc_dir }}utilities/"
+      state: directory
+
   - name: Place the zip files in the BC server utilities folder 
     unarchive: 
       src: "{{ software_path }}/BC48UtilsP_4-20007203.ZIP"
       dest: "{{ sapbc_dir }}utilities/"
-  
+      remote_src: yes
+
+  - name: Create the SAP BC utilities/startupstop folder
+    file:
+      path: "{{ sapbc_dir }}utilities/startupstop/"
+      state: directory
+
   - name: Unarchive the startupstop.zip 
     unarchive: 
       src: "{{ sapbc_dir }}utilities/startupstop_v21.zip"
       dest: "{{ sapbc_dir }}utilities/startupstop/"
+      remote_src: yes
 
   - name: Copy the bcserver.sh to the /etc/init.d folder
     command: "cp {{ sapbc_dir }}utilities/startupstop/bcserver.sh /etc/init.d/"
