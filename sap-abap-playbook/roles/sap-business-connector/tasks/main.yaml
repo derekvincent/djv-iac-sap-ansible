@@ -114,3 +114,6 @@
 
 - name: Install software
   include_tasks: install-software.yml
+
+- name: NFS Mount Points
+  include_tasks: mounts.yml  

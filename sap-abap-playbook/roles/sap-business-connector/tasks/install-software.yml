@@ -79,6 +79,7 @@
     ansible.builtin.find:
       paths: "{{ software_path }}"
       patterns: 'sapjvm_*'
+      file_type: directory
     register: sapjvm_folder
 
   - name: Remove the old JVM
@@ -130,7 +131,7 @@
   - name: Update Class path after HF14 is installed 
     replace:
       path: "{{ sapbc_dir }}/bin/server.sh"
-      regexp: 'CLASSPATH=${CLASSPATH}:${B2B_ROOT}/lib/client.jar:${B2B_ROOT}/lib/iaik_jce.jar:${B2B_ROOT}/lib/mail.jar'
+      regexp: '^CLASSPATH\=.*iaik_jce\.jar.*'
       replace: 'CLASSPATH=${CLASSPATH}:${B2B_ROOT}/lib/iaik_cms.jar:${B2B_ROOT}/lib/jdsr.jar:${B2B_ROOT}/lib/iaik_ssl.jar:${B2B_ROOT}/lib/client.jar:${B2B_ROOT}/lib/iaik_jce.jar:${B2B_ROOT}/lib/mail.jar'
 
 - name: Install the SAPBC utilities 
@@ -160,8 +161,13 @@
   - name: Copy the bcserver.sh to the /etc/init.d folder
     command: "cp {{ sapbc_dir }}utilities/startupstop/bcserver.sh /etc/init.d/"
 
+  - name: Set the execute flag on the SAP BC Server installer.
+    ansible.builtin.file:
+      path: "/etc/init.d/bcserver.sh"
+      mode: 'u+x,g+x'
+
   - name: Enable the bcserver.sh service 
-    command: "systemctl enable /etc/init.d/bcserver.sh"
+    command: "systemctl enable bcserver.sh"
 
   - name: Start the bcserver.sh service
     command: "/etc/init.d/bcserver.sh start"
