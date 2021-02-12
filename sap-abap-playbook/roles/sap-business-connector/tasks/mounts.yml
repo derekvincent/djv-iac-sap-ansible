@@ -1,15 +1,13 @@
 ---
 - name: Mount the Interface file systems
   mount: 
-    path: "{{ mount.path }}"
-    src: "{{ mount.src }}"
+    path: "{{ item.mount_point }}"
+    src: "{{ item.source }}"
     fstype: nfs
-    opts: "{{ mount.option }}"
+    opts: "{{ item.option }}"
     dump: "0"
     passno: "0"
     state: mounted
   loop: "{{ mounts }}"
-  loop_control:
-    loop_var: mount
   when: mounts is defined and mounts
 ...
