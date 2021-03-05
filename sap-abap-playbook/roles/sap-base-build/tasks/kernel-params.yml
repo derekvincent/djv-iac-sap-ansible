@@ -1,0 +1,43 @@
+- name: Set the vm.swapiness 
+  ansible.posix.sysctl:
+    name: vm.swappiness
+    value: '20'
+    state: present
+
+- name: Set the fs.aio-max-nr 
+  ansible.posix.sysctl:
+    name: fs.aio-max-nr
+    value: '1048576'
+    state: present
+
+- name: Set the fs.file-max 
+  ansible.posix.sysctl:
+    name: fs.file-max
+    value: '6291456'
+    state: present
+
+- name: Set the vm.nr_hugepages 
+  ansible.posix.sysctl:
+    name: vm.nr_hugepages
+    value: "{{ hugepages_size }}"
+    state: present
+  when: hugepages_size is defined and hugepages_size > "0"
+
+- name: Create the sap-hugepage.conf file 
+  file:
+    path: /etc/security/limits.d/sap-hugepage.conf
+    owner: root
+    group: root
+    state: touch
+    mode: '0644'
+  when: hugepages_size is defined and hugepages_size > "0"  
+
+- name: Add Huge Page Memlock variable 
+  blockinfile:
+    path: /etc/security/limits.d/sap-hugepage.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Memlock for hugepages"
+    block: |
+       @sapsys - memlock unlimited
+       @dba - memlock unlimited
+       @sdba - memlock unlimited
+  when: hugepages_size is defined and hugepages_size > "0"

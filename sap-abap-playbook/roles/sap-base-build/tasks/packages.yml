@@ -18,6 +18,17 @@
       name: '*'
       state: latest
 
+  - name: Install the sysstat 
+    community.general.zypper:
+      name: systat
+      state: latest
+
+  - name: Make sure sysstat service is running
+    systemd:
+      state: started
+      enabled: yes
+      name: sysstat
+
   ## SAP Requirments
   - name: Install uuidd package 
     community.general.zypper:

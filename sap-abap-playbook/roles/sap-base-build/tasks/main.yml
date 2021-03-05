@@ -82,6 +82,9 @@
   community.general.timezone:
     name: America/Toronto
 
+- name: Set the Kernel Parameters required for SAP 
+  include_tasks: kernel-params.yml
+
 - name: Update Profile variables 
   block: 
 
