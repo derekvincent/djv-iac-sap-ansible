@@ -21,7 +21,7 @@
     name: vm.nr_hugepages
     value: "{{ hugepages_size }}"
     state: present
-  when: hugepages_size is defined and hugepages_size > "0"
+  when: hugepages_size is defined and hugepages_size > 0
 
 - name: Create the sap-hugepage.conf file 
   file:
@@ -30,7 +30,7 @@
     group: root
     state: touch
     mode: '0644'
-  when: hugepages_size is defined and hugepages_size > "0"  
+  when: hugepages_size is defined and hugepages_size > 0 
 
 - name: Add Huge Page Memlock variable 
   blockinfile:
@@ -40,4 +40,4 @@
        @sapsys - memlock unlimited
        @dba - memlock unlimited
        @sdba - memlock unlimited
-  when: hugepages_size is defined and hugepages_size > "0"
+  when: hugepages_size is defined and hugepages_size > 0
