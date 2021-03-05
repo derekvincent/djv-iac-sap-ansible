@@ -20,7 +20,7 @@
 
   - name: Install the sysstat 
     community.general.zypper:
-      name: systat
+      name: sysstat
       state: latest
 
   - name: Make sure sysstat service is running
