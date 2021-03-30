@@ -8,7 +8,10 @@
     state: present
 
 - set_fact: 
-    lv_option: "{{ (item.devices | length > 1) | ternary('-i item.devices | length','') }}"
+    device_count: "{{ item.devices | length }}"
+    
+- set_fact: 
+    lv_option: "{{ (device_count > 1) | ternary('-i device_count','') }}"
 
 - name: Create Logic Volumes"
   lvol: 
