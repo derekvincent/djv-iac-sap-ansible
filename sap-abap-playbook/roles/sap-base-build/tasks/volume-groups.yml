@@ -7,6 +7,9 @@
     pvresize: yes
     state: present
 
+- set_fact: 
+    lv_option: "{{ (item.devices | length > 1) | ternary('-i item.devices | length','') }}"
+
 - name: Create Logic Volumes"
   lvol: 
     vg: "vg-{{ item.name }}"
@@ -15,6 +18,7 @@
     resizefs: yes
     shrink: no 
     state: present
+    opts: "{{ lv_option }}"
   loop: "{{ item.logical_volumes }}"
   loop_control:
     loop_var: logical_volume
