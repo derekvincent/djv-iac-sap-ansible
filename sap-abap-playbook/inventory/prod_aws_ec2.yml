@@ -1,0 +1,36 @@
+plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+
+filters:
+  # All instances with their `Environment` tag set to `dev`
+  tag:sapm:environment: prod
+
+keyed_groups:
+  # add hosts to tag_Name_value groups for each aws_ec2 host's tags.Name variable
+  # - key: tags
+  #   prefix: tags_
+  #   separator: ""
+  - key: tags.Name
+    prefix: tag_name
+    separator: "_"
+  - key: tags['sapm:application']
+    prefix: tag_app
+    separator: "_"
+  - key: tags['sapm:sap:type']
+    prefix: tag_sap_type
+    separator: "_"
+
+hostnames:
+# a list in order of precedence for hostname variables.
+# 
+  - tag:sapm:hostname
+  - private-dns-name
+  - private-ip-address
+
+compose:
+  # set the ansible_host variable to connect with the private IP address without changing the hostname
+  ansible_host: private_ip_address
+  ansible_user: ec2-user
+  ansible_become: true
+  ansible_python_interpreter: /usr/bin/python3
