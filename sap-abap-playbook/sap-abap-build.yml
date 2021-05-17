@@ -1,5 +1,5 @@
 ---
-- hosts: tag_app_sap:tag_app_shared
+- hosts: tag_app_sap:tag_app_shared_service
   # vars_files:
   #   - "variables.yml"
   #gather_facts: no
