@@ -1,5 +1,5 @@
 ---
-- hosts: tag_app_sap
+- hosts: tag_app_sap:tag_app_shared_service
   #gather_facts: no
 
   roles:
