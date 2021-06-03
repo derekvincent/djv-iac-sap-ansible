@@ -114,7 +114,8 @@
     register: sapbc_service_fp_file
 
   - name: Install the Hotfix
-    ansible.builtin.unarchive:
+    # ansible.builtin.unarchive:
+    copy:
       src: "{{ sapbc_service_fp_file.files[0].path }}"
       dest: "{{ sapbc_dir }}replicate/inbound/"
       remote_src: yes
