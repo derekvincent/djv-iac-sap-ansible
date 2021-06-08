@@ -4,6 +4,7 @@ cleanup_install: False
 start_dir_cd : ["{{ sltools_path}}/SWPM", ]
 skip_sap_install: False
 
+standalone_daa: False 
 sap_install_control : {
   "sap_abap_750_ase" :
     {
