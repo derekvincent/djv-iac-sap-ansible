@@ -2,3 +2,4 @@
 *.log
 vbox_host.cfg
 .DS_Store
+.vscode/spellright.dict
