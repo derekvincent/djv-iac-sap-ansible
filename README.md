@@ -96,7 +96,7 @@ In order to run the playbooks a parameters are required
 
 <ins>Example Run</ins>
 ```
-./ansible-play-ssm-key.sh /sapm/sap-qa/keypairs/sapm-sap-qa-us-east-1 -i inventory/qa_aws_ec2.yml --limit eccqa.aws.domain.com -e "@deploy-vars/qas-variables.yml" sap-abap-deployment.yml
+./ansible-play-ssm-key.sh /sapm/sap-qa/keypairs/sapm-sap-qa-us-east-1 -i inventory/qa_aws_ec2.yml --limit eccqa.aws.domain.com -e "@deploy-vars/QAS-variables.yml" sap-abap-deployment.yml
 ```
 
 ### Debugging the Installation

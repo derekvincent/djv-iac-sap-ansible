@@ -5,7 +5,7 @@ cleanup_install: true
 sap_install_target: sap_abap_750_ase
 
 ##SAP 
-sid: DEV
+sid: dev
 domain_name: aws.domain.com
 
 ### ASCS 
@@ -21,5 +21,5 @@ ci_hostname: eccdev
 db_hostname: eccdev
 userstore_hostname: eccdev 
 ### Passwords
-master_password_ssm_key: /sapm/sap-dev/DEV/master_password
+master_password_ssm_key: /sapm/sap-dev/dev/master_password
 

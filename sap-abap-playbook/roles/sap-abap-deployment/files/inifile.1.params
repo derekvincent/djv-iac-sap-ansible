@@ -54,7 +54,7 @@ NW_GetSidNoProfiles.sid = WHY
 # NW_getDBInfoGeneric.strictDbSidCheck = true
 
 # The FQDN of the system
-NW_getFQDN.FQDN = aws.keyfile.corp
+NW_getFQDN.FQDN = aws.domain.com
 
 # SAP INTERNAL USE ONLY
 # NW_getFQDN.resolve = true

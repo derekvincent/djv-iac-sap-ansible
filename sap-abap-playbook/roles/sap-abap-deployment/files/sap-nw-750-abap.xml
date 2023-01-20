@@ -53,7 +53,7 @@
         <properties>
           <property name ="doc-long" value =" The FQDN of the system" />
         </properties>
-        <strval><![CDATA[aws.keyfile.corp]]>
+        <strval><![CDATA[aws.domain.com]]>
         </strval>
       </fld>
       <fld name="resolve">

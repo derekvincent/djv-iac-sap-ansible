@@ -85,7 +85,7 @@
     ## This files was built for SLES by Clockwork and provided by them via a bucket.
     - name: Install Amazon EFS Util - SLES Clockwork Build
       community.general.zypper:
-        name: 'https://clkwrkswdist.s3.amazonaws.com/amazon-efs-utils-1.28.2-1.opensuse.noarch.rpm'
+        name: 'https://<softdist>.s3.amazonaws.com/amazon-efs-utils-1.28.2-1.opensuse.noarch.rpm'
         disable_gpg_check: yes
         state: present
 
